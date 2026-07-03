@@ -1,10 +1,12 @@
 ## General workflow
 Move into the project folder the perform:
 
+```
 mkdir build
 cd build
 cmake ..
 make
+```
 
 The two executable are in ./build folder. 
 
