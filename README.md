@@ -1,14 +1,12 @@
 ## General workflow
-Move into the project folder then perform:
+Move into the project folder the perform:
 
-```
-mkdir build
+mkdir build 
 cd build
 cmake ..
 make
-```
 
-The two executable are in ./build folder. 
+The two executables are in ./build folder. 
 
-./slding_window benchmarks the developed approach
+./slding_window benchmarks the developed approach <br>
 ./recalculate bencmarks recalculating the window each time
