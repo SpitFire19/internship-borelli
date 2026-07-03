@@ -1,13 +1,13 @@
 #include "simulation.h"
 
 /*
-clear && g++ delaunay_sliding_window_benchmark.cpp -std=c++17 -I/home/yaroslav/gudhi-devel/src/Simplex_tree/include -I/home/yaroslav/gudhi-devel/src/Alpha_complex/include -I/home/yaroslav/gudhi-devel/src/common/include -I/usr/include/eigen3 -lgmp -lmpfr -lcsv -o main && ./main > out.txt
+g++ delaunay_sliding_window_benchmark.cpp -std=c++17 -I/home/yaroslav/gudhi-devel/src/Simplex_tree/include -I/home/yaroslav/gudhi-devel/src/Alpha_complex/include -I/home/yaroslav/gudhi-devel/src/common/include -I/usr/include/eigen3 -lgmp -lmpfr -lcsv -o main && ./main > out.txt
 */
 
 int main() {
     vector<int> point_counts = {100, 250};
     vector<int> window_sizes = {50, 100, 150, 200, 250, 300, 400, 500};
-
+    std::cerr <<"Benchmarking sliding window approach\n";
     for(int n_points_after : point_counts) {
         for(int window_size : window_sizes) {
             SimulationState state(dim);

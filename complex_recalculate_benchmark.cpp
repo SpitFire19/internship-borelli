@@ -3,7 +3,7 @@
 int main() {
     vector<int> point_counts = {100, 250};
     vector<int> window_sizes = {50, 100, 150, 200, 250, 300, 400, 500};
-
+    std::cerr <<"Benchmarking recalculating window for every new point\n";
     for(int n_points_after : point_counts) {
         for(int window_size : window_sizes) {
             SimulationState state(dim);
