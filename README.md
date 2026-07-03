@@ -1,5 +1,5 @@
 ## General workflow
-Move into the project folder the perform:
+Move into the project folder then perform:
 
 ```
 mkdir build
