@@ -1,0 +1,4 @@
+cpp/build/
+src/*
+!src/*.cpp
+python/__pycache__/

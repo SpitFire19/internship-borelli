@@ -59,16 +59,3 @@ add_executable(recalculate
 target_link_libraries(recalculate PRIVATE
     delaunay_core
 )
-
-
-# ============================================================
-# Simple update benchmark
-# ============================================================
-
-add_executable(simple_update
-    src/local_filt_update.cpp
-)
-
-target_link_libraries(simple_update PRIVATE
-    delaunay_core
-)
