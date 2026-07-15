@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ed import ed_detection_vectorized
+from generate_data import generate_dist
 from mmd import mmd_detection_vectorized
 from tewma import tewma_detection_vectorized
-
-from generate_data import generate_dist
 
 # ============================================================
 # Configuration
@@ -145,7 +144,7 @@ dd_total = np.zeros(n_values, dtype=float)
 # ============================================================
 # Run Monte Carlo epochs
 # ============================================================
-
+rng = np.random.default_rng(42)
 for epoch in range(n_epochs):
 
     print(f"\nEpoch {epoch + 1}/{n_epochs}")
@@ -154,13 +153,13 @@ for epoch in range(n_epochs):
     # Generate pre-change data
     # --------------------------------------------------------
 
-    null_dist_data = generate_dist(null_dist_name, d, n_samples // 2)
+    null_dist_data = generate_dist(rng, null_dist_name, d, n_samples // 2)
 
     # --------------------------------------------------------
     # Generate post-change data
     # --------------------------------------------------------
 
-    alt_dist_data = generate_dist(alt_dist_name, d, n_samples // 2)
+    alt_dist_data = generate_dist(rng, alt_dist_name, d, n_samples // 2)
 
     # --------------------------------------------------------
     # Concatenate:
