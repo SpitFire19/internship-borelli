@@ -11,18 +11,16 @@ from tewma import tewma_detection_vectorized
 # ============================================================
 
 n_samples = 1000
-window_size = 20
+window_size = 50
 d = 3
 student_df = 5
 
-n_epochs = 50
+n_epochs = 1
 n_thresholds = 100
 
-algorithms = [
-    "TEWMA",
-    "MMD",
-    "Energy-based",
-]
+rng = np.random.default_rng(42)
+
+algorithms = ["TEWMA", "MMD", "Energy-based"]
 
 distributions = [
     rf"$\mathcal{{N}}(0, I_{{{d}}})$",
@@ -31,7 +29,6 @@ distributions = [
     rf"$t_{{{student_df}}}^{{{d}}}$",
     rf"$\mathrm{{Laplace}}(0,1)^{{{d}}}$",
 ]
-
 distribution_names = [
     "N(0, 1)",
     "MG(0.5)",
@@ -39,12 +36,15 @@ distribution_names = [
     "t(5)",
     "Laplace(0, 1)",
 ]
-
-gammas = np.linspace(0, 10, n_thresholds)
-
-rng = np.random.default_rng(42)
-
 n = len(distributions)
+
+# ============================================================
+# Threshold configuration
+# ============================================================
+n_thresholds = 1000
+gammas_tewma = np.logspace(0, 100, n_thresholds)
+gammas_mmd = np.linspace(0, 5, n_thresholds)
+gammas_ed = np.linspace(0, 0.8, n_thresholds)
 
 # ============================================================
 # Figure
@@ -82,7 +82,7 @@ for i in range(n):
             )
             ax.grid(False)
             continue
-        print(f"Build window {i} {j}")
+        print(f"Build window ({i + 1}, {j + 1})")
         null_name = distribution_names[i]
         alt_name = distribution_names[j]
 
@@ -101,78 +101,60 @@ for i in range(n):
             )
             df_change = pd.DataFrame(changed)
 
-            # -------------------------
             # TEWMA
-            # -------------------------
-
             arl = tewma_detection_vectorized(
                 df=df_no_change,
-                gammas=gammas,
+                gammas=gammas_tewma,
                 window_size=window_size,
             )
-
             dd = tewma_detection_vectorized(
                 df=df_change,
-                gammas=gammas,
+                gammas=gammas_tewma,
                 window_size=window_size,
                 T=n_samples // 2,
             )
 
             dd = dd - n_samples // 2
-
             arl_total["TEWMA"] += arl
             dd_total["TEWMA"] += dd
 
-            # -------------------------
             # MMD
-            # -------------------------
-
             arl = mmd_detection_vectorized(
                 df=df_no_change,
-                gammas=gammas,
+                gammas=gammas_mmd,
                 window_size=window_size,
             )
-
             dd = mmd_detection_vectorized(
                 df=df_change,
-                gammas=gammas,
+                gammas=gammas_mmd,
                 window_size=window_size,
                 T=n_samples // 2,
             )
 
             dd = dd - n_samples // 2
-
             arl_total["MMD"] += arl
             dd_total["MMD"] += dd
 
-            # -------------------------
             # Energy distance
-            # -------------------------
-
-            arl = ed_detection_vectorized(
+            arl_ed = ed_detection_vectorized(
                 X=df_no_change,
-                thresholds=gammas,
+                thresholds=gammas_ed,
                 window_size=window_size,
             )
-
-            dd = ed_detection_vectorized(
+            dd_ed = ed_detection_vectorized(
                 X=df_change,
-                thresholds=gammas,
+                thresholds=gammas_ed,
                 window_size=window_size,
                 T=n_samples // 2,
             )
 
-            dd = dd - n_samples // 2
+            dd_ed -= n_samples // 2
+            arl_total["Energy-based"] += arl_ed
+            dd_total["Energy-based"] += dd_ed
 
-            arl_total["Energy-based"] += arl
-            dd_total["Energy-based"] += dd
-
-        # ----------------------------------------------------
         # Average over epochs
-        # ----------------------------------------------------
 
         for algo in algorithms:
-
             arl_total[algo] /= n_epochs
             dd_total[algo] /= n_epochs
 
@@ -186,15 +168,12 @@ for i in range(n):
             )
 
         ax.grid(True, alpha=0.3)
-
         print(f"Finished ({i+1}, {j+1})")
 
 # ============================================================
 # Distribution names
 # ============================================================
-
 for j, dist in enumerate(distributions):
-
     axes[-1, j].set_xlabel(
         dist,
         fontsize=12,
@@ -203,7 +182,6 @@ for j, dist in enumerate(distributions):
     )
 
 for i, dist in enumerate(distributions):
-
     axes[i, 0].set_ylabel(
         dist,
         fontsize=12,
@@ -215,16 +193,13 @@ for i, dist in enumerate(distributions):
 # ============================================================
 # Tick labels
 # ============================================================
-
 for i in range(n):
-
     axes[i, 0].tick_params(
         axis="y",
         labelleft=True,
     )
 
 for j in range(n):
-
     axes[-1, j].tick_params(
         axis="x",
         labelbottom=True,
@@ -233,7 +208,6 @@ for j in range(n):
 # ============================================================
 # Global labels
 # ============================================================
-
 fig.text(
     0.5,
     0.04,
@@ -254,9 +228,7 @@ fig.text(
 # ============================================================
 # Legend
 # ============================================================
-
 handles, labels = axes[0, 1].get_legend_handles_labels()
-
 fig.legend(
     handles,
     labels,
@@ -264,16 +236,10 @@ fig.legend(
     ncol=3,
     fontsize=12,
 )
-
-# ============================================================
-# Title
-# ============================================================
-
 fig.suptitle(
     "ARL/DD comparison of change-point detection algorithms",
     fontsize=18,
 )
-
 plt.subplots_adjust(
     left=0.12,
     right=0.98,
@@ -282,5 +248,4 @@ plt.subplots_adjust(
     wspace=0.15,
     hspace=0.15,
 )
-
 plt.show()

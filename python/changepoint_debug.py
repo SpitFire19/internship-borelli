@@ -9,9 +9,9 @@ from tewma import tewma_detection_vectorized
 # ============================================================
 # Configuration
 # ============================================================
-n_epochs = 5
+n_epochs = 50
 n_samples = 1000
-window_size = 20
+window_size = 50
 d = 3
 student_df = 5
 distributions = [
@@ -72,9 +72,9 @@ alt_dist_name = distribution_names[j]
 # Threshold configuration
 # ============================================================
 n_thresholds = 1000
-gammas = np.logspace(0, 100, n_thresholds)
+gammas_tewma = np.logspace(0, 100, n_thresholds)
 gammas_mmd = np.linspace(0, 5, n_thresholds)
-gammas_ed = np.linspace(0, 0.7, n_thresholds)
+gammas_ed = np.linspace(0, 0.8, n_thresholds)
 # ============================================================
 # Initialize totals BEFORE the epoch loop
 # ============================================================
@@ -98,26 +98,22 @@ for epoch in range(n_epochs):
     )
     df_change = pd.DataFrame(changed)
 
-    # ========================================================
     # Run selected algorithm
-    # ========================================================
     arl = tewma_detection_vectorized(
         df=df_no_change,
-        gammas=gammas,
+        gammas=gammas_tewma,
         window_size=window_size,
     )
     dd = tewma_detection_vectorized(
         df=df_change,
-        gammas=gammas,
+        gammas=gammas_tewma,
         window_size=window_size,
         T=n_samples // 2,
     )
     dd = dd - n_samples // 2
     arl_total["TEWMA"] += arl
     dd_total["TEWMA"] += dd
-    # -------------------------
     # MMD
-    # -------------------------
     arl = mmd_detection_vectorized(
         df=df_no_change,
         gammas=gammas_mmd,
@@ -132,27 +128,25 @@ for epoch in range(n_epochs):
     dd = dd - n_samples // 2
     arl_total["MMD"] += arl
     dd_total["MMD"] += dd
-    # -------------------------
     # Energy distance
-    # -------------------------
-    arl = ed_detection_vectorized(
+    arl_ed = ed_detection_vectorized(
         X=df_no_change,
         thresholds=gammas_ed,
         window_size=window_size,
     )
-    dd = ed_detection_vectorized(
+    dd_ed = ed_detection_vectorized(
         X=df_change,
         thresholds=gammas_ed,
         window_size=window_size,
         T=n_samples // 2,
     )
-    print(arl.shape)
-    print(arl[:10])
-    print(arl[-10:])
-    print(np.isinf(arl).sum())
-    dd = dd - n_samples // 2
-    arl_total["Energy-based"] += arl
-    dd_total["Energy-based"] += dd
+    print(arl_ed.shape)
+    print(arl_ed[:10])
+    print(arl_ed[-10:])
+    print(np.isinf(arl_ed).sum())
+    dd_ed -= n_samples // 2
+    arl_total["Energy-based"] += arl_ed
+    dd_total["Energy-based"] += dd_ed
 
 
 for algo in algorithms:
