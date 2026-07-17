@@ -30,8 +30,8 @@ def tewma_detection_vectorized(
     n_samples = len(df)
 
     alpha = 0.05
-    tau = 3  # Maximum filtration value (a^2 max)
-    d = 100  # Discretization
+    tau = 2  # Maximum filtration value (a^2 max)
+    d = 250  # Discretization
 
     epsilons = np.linspace(0.1, tau, d)
 
