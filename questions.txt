@@ -1,0 +1,3 @@
+* Can we allow algorithm be online or is it offline-only ?
+* I notice that there are three types of changes: in topology, in geometry, and in distribution. How can we distinguish those on graphics designed previously ?
+* 

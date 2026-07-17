@@ -30,5 +30,16 @@ def generate_dist(
     elif dist_name == "Laplace(0, 1)":
         return rng.laplace(loc=0.0, scale=1.0 / np.sqrt(2), size=(n_samples, dim))
 
+    elif dist_name == "Dir(1, 1, 1)":
+        return rng.dirichlet(
+            alpha=np.ones(dim),
+            size=n_samples,
+        )
+
+    elif dist_name == "Dir(10, 10, 10)":
+        return rng.dirichlet(
+            alpha=10 * np.ones(dim),
+            size=n_samples,
+        )
     else:
         raise ValueError(f"Unknown distribution: {dist_name!r}")

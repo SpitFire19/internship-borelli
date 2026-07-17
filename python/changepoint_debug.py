@@ -9,28 +9,32 @@ from tewma import tewma_detection_vectorized
 # ============================================================
 # Configuration
 # ============================================================
-n_epochs = 50
+n_epochs = 1
 n_samples = 1000
 window_size = 50
-d = 3
+d = 2
 student_df = 5
 distributions = [
     rf"$\mathcal{{N}}(0, I_{{{d}}})$",
     r"$MG(0.5)$",
     rf"$\mathcal{{U}}\left([-\sqrt{{3}}, \sqrt{{3}}]^{{{d}}}\right)$",
     rf"$t_{{{student_df}}}^{{{d}}}$",
-    rf"$\mathrm{{Laplace}}(0, 1)^{{{d}}}$",
+    rf"$\mathrm{{Laplace}}(0,1)^{{{d}}}$",
+    rf"$\mathrm{{Dir}}(1, 1, 1)$",
+    rf"$\mathrm{{Dir}}(5, 5, 5)$",
 ]
-
 # ============================================================
 # Distribution names used by generate_dist file
 # ============================================================
+
 distribution_names = [
     "N(0, 1)",
     "MG(0.5)",
     "U[-sqrt(3), sqrt(3)]",
     "t(5)",
     "Laplace(0, 1)",
+    "Dir(1, 1, 1)",
+    "Dir(10, 10, 10)",
 ]
 
 # ============================================================
@@ -57,8 +61,8 @@ rng = np.random.default_rng(42)
 # DEBUGGING CONFIGURATION
 # Select exactly one pair (i, j) and one algorithm
 # ============================================================
-i = 0
-j = 1
+i = 5
+j = 6
 
 # ============================================================
 # Get selected null and alternative distributions
@@ -71,8 +75,8 @@ alt_dist_name = distribution_names[j]
 # ============================================================
 # Threshold configuration
 # ============================================================
-n_thresholds = 1000
-gammas_tewma = np.logspace(0, 100, n_thresholds)
+n_thresholds = 100
+gammas_tewma = np.linspace(0, 0.08, n_thresholds)
 gammas_mmd = np.linspace(0, 5, n_thresholds)
 gammas_ed = np.linspace(0, 0.8, n_thresholds)
 # ============================================================
@@ -88,46 +92,50 @@ rng = np.random.default_rng(42)
 for epoch in range(n_epochs):
     print(f"Epoch {epoch + 1}/{n_epochs}")
 
-    no_change = generate_dist(rng, null_dist_name, d, n_samples)
-    df_no_change = pd.DataFrame(no_change)
     before = generate_dist(rng, null_dist_name, d, n_samples // 2)
-    after = generate_dist(rng, alt_dist_name, d, n_samples // 2)
-    changed = np.concatenate(
-        [before, after],
+    no_change_after = generate_dist(rng, null_dist_name, d, n_samples // 2)
+    change_after = generate_dist(rng, alt_dist_name, d, n_samples // 2)
+    no_change = np.concatenate(
+        [before, no_change_after],
         axis=0,
     )
+    changed = np.concatenate(
+        [before, change_after],
+        axis=0,
+    )
+    df_no_change = pd.DataFrame(no_change)
     df_change = pd.DataFrame(changed)
 
     # Run selected algorithm
-    arl = tewma_detection_vectorized(
+    arl_tewma = tewma_detection_vectorized(
         df=df_no_change,
         gammas=gammas_tewma,
         window_size=window_size,
     )
-    dd = tewma_detection_vectorized(
+    dd_tewma = tewma_detection_vectorized(
         df=df_change,
         gammas=gammas_tewma,
         window_size=window_size,
         T=n_samples // 2,
     )
-    dd = dd - n_samples // 2
-    arl_total["TEWMA"] += arl
-    dd_total["TEWMA"] += dd
+    dd_tewma -= n_samples // 2
+    arl_total["TEWMA"] += arl_tewma
+    dd_total["TEWMA"] += dd_tewma
     # MMD
-    arl = mmd_detection_vectorized(
+    arl_mmd = mmd_detection_vectorized(
         df=df_no_change,
         gammas=gammas_mmd,
         window_size=window_size,
     )
-    dd = mmd_detection_vectorized(
+    dd_mmd = mmd_detection_vectorized(
         df=df_change,
         gammas=gammas_mmd,
         window_size=window_size,
         T=n_samples // 2,
     )
-    dd = dd - n_samples // 2
-    arl_total["MMD"] += arl
-    dd_total["MMD"] += dd
+    dd_mmd -= n_samples // 2
+    arl_total["MMD"] += arl_mmd
+    dd_total["MMD"] += dd_mmd
     # Energy distance
     arl_ed = ed_detection_vectorized(
         X=df_no_change,
@@ -140,10 +148,8 @@ for epoch in range(n_epochs):
         window_size=window_size,
         T=n_samples // 2,
     )
-    print(arl_ed.shape)
-    print(arl_ed[:10])
-    print(arl_ed[-10:])
-    print(np.isinf(arl_ed).sum())
+    print(arl_tewma.shape)
+    print(*arl_tewma)
     dd_ed -= n_samples // 2
     arl_total["Energy-based"] += arl_ed
     dd_total["Energy-based"] += dd_ed
@@ -152,8 +158,6 @@ for epoch in range(n_epochs):
 for algo in algorithms:
     arl_total[algo] /= n_epochs
     dd_total[algo] /= n_epochs
-    print(arl_total[algo].max())
-    print(dd_total[algo].max())
     ax.plot(
         arl_total[algo],
         dd_total[algo],

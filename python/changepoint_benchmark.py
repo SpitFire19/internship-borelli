@@ -12,11 +12,11 @@ from tewma import tewma_detection_vectorized
 
 n_samples = 1000
 window_size = 50
-d = 3
+d = 2
 student_df = 5
 
-n_epochs = 1
-n_thresholds = 100
+n_epochs = 25
+n_thresholds = 200
 
 rng = np.random.default_rng(42)
 
@@ -28,6 +28,8 @@ distributions = [
     rf"$\mathcal{{U}}\left([-\sqrt{{3}}, \sqrt{{3}}]^{{{d}}}\right)$",
     rf"$t_{{{student_df}}}^{{{d}}}$",
     rf"$\mathrm{{Laplace}}(0,1)^{{{d}}}$",
+    rf"$\mathrm{{Dir}}(1, 1, 1)$",
+    rf"$\mathrm{{Dir}}(10, 10, 10)$",
 ]
 distribution_names = [
     "N(0, 1)",
@@ -35,6 +37,8 @@ distribution_names = [
     "U[-sqrt(3), sqrt(3)]",
     "t(5)",
     "Laplace(0, 1)",
+    "Dir(1, 1, 1)",
+    "Dir(10, 10, 10)",
 ]
 n = len(distributions)
 
@@ -90,50 +94,53 @@ for i in range(n):
         dd_total = {algo: np.zeros(n_thresholds) for algo in algorithms}
 
         for epoch in range(n_epochs):
-            no_change = generate_dist(rng, null_name, d, n_samples)
-            df_no_change = pd.DataFrame(no_change)
-
             before = generate_dist(rng, null_name, d, n_samples // 2)
-            after = generate_dist(rng, alt_name, d, n_samples // 2)
-            changed = np.concatenate(
-                [before, after],
+            no_change_after = generate_dist(rng, null_name, d, n_samples // 2)
+            change_after = generate_dist(rng, alt_name, d, n_samples // 2)
+            no_change = np.concatenate(
+                [before, no_change_after],
                 axis=0,
             )
+            changed = np.concatenate(
+                [before, change_after],
+                axis=0,
+            )
+            df_no_change = pd.DataFrame(no_change)
             df_change = pd.DataFrame(changed)
 
             # TEWMA
-            arl = tewma_detection_vectorized(
+            arl_tewma = tewma_detection_vectorized(
                 df=df_no_change,
                 gammas=gammas_tewma,
                 window_size=window_size,
             )
-            dd = tewma_detection_vectorized(
+            dd_tewma = tewma_detection_vectorized(
                 df=df_change,
                 gammas=gammas_tewma,
                 window_size=window_size,
                 T=n_samples // 2,
             )
 
-            dd = dd - n_samples // 2
-            arl_total["TEWMA"] += arl
-            dd_total["TEWMA"] += dd
+            dd_tewma -= n_samples // 2
+            arl_total["TEWMA"] += arl_tewma
+            dd_total["TEWMA"] += dd_tewma
 
             # MMD
-            arl = mmd_detection_vectorized(
+            arl_mmd = mmd_detection_vectorized(
                 df=df_no_change,
                 gammas=gammas_mmd,
                 window_size=window_size,
             )
-            dd = mmd_detection_vectorized(
+            dd_mmd = mmd_detection_vectorized(
                 df=df_change,
                 gammas=gammas_mmd,
                 window_size=window_size,
                 T=n_samples // 2,
             )
 
-            dd = dd - n_samples // 2
-            arl_total["MMD"] += arl
-            dd_total["MMD"] += dd
+            dd_mmd -= n_samples // 2
+            arl_total["MMD"] += arl_mmd
+            dd_total["MMD"] += dd_mmd
 
             # Energy distance
             arl_ed = ed_detection_vectorized(
