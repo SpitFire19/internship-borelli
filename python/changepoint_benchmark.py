@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from ed import ed_detection_vectorized
+from changepoint.ed import ed_detection_vectorized
+from changepoint.mmd import mmd_detection_vectorized
+from changepoint.tewma import tewma_detection_vectorized
 from generate_data import generate_dist
-from mmd import mmd_detection_vectorized
-from tewma import tewma_detection_vectorized
 
 # ============================================================
 # Configuration
