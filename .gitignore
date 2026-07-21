@@ -2,4 +2,4 @@ cpp/build/
 src/*
 !src/*.cpp
 python/__pycache__/
-python/changepoint/__pycache__
+python/changepoint/__pycache__/
