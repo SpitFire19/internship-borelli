@@ -5,8 +5,8 @@ from generate_data import generate_dist
 # Settings
 rng = np.random.default_rng(42)
 
-null_dist = "Dir(1, 1, 1)"
-alt_dist = "Dir(10, 10, 10)"
+null_dist = "Dir(10, 10, 10)"
+alt_dist = "Dir(1, 1, 1)"
 
 dim = 2
 n_samples = 2000
@@ -65,7 +65,7 @@ elif dim == 2:
         alpha=0.5,
         label=null_dist,
     )
-
+    """
     plt.scatter(
         X1[:, 0],
         X1[:, 1],
@@ -73,7 +73,8 @@ elif dim == 2:
         alpha=0.5,
         label=alt_dist,
     )
-
+    """
+    plt.plot([0, 1, 0, 0], [0, 0, 1, 0], "k-", lw=2)
     plt.xlabel("$x_1$")
     plt.ylabel("$x_2$")
 
@@ -128,7 +129,7 @@ else:
     plt.ylabel("$x_2$")
     plt.title(f"First two coordinates (dim={dim})")
 
-plt.title(f"{null_dist} vs {alt_dist}")
+plt.title(f"{null_dist}")
 plt.legend()
 plt.tight_layout()
 plt.show()

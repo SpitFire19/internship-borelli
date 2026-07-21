@@ -29,12 +29,11 @@ def tewma_detection_vectorized(
 
     n_samples = len(df)
 
-    alpha = 0.05
-    tau = 2  # Maximum filtration value (a^2 max)
+    alpha = 0.05  # 0.05
+    tau = 5  # Maximum filtration value (a^2 max)
     d = 250  # Discretization
 
-    epsilons = np.linspace(0.1, tau, d)
-
+    epsilons = np.linspace(0, tau, d)
     phi = np.zeros(d)
     ecc_on_window_prev = []
 
@@ -49,21 +48,15 @@ def tewma_detection_vectorized(
 
     # Sequential monitoring
     for i in range(window_size, n_samples - window_size + 1):
-
         # Add a previous non-overlapping window to the reference ECCs
         if i % window_size == 0:
-
             prev_window = df.iloc[i - window_size : i].to_numpy()
-
             alpha_st_prev = gd.AlphaComplex(points=prev_window).create_simplex_tree()
-
             ecc_on_window_prev.append(ecc_on_grid(alpha_st_prev, epsilons))
 
         # Current sliding window
         window = df.iloc[i : i + window_size].to_numpy()
-
         alpha_st = gd.AlphaComplex(points=window).create_simplex_tree()
-
         ecc = ecc_on_grid(alpha_st, epsilons)
 
         # EWMA update

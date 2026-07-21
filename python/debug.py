@@ -1,18 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from ed import ed_detection_vectorized
+from changepoint.ed import ed_detection_vectorized
+from changepoint.mmd import mmd_detection_vectorized
+from changepoint.tewma import tewma_detection_vectorized
 from generate_data import generate_dist
-from mmd import mmd_detection_vectorized
-from tewma import tewma_detection_vectorized
 
 # ============================================================
 # Configuration
 # ============================================================
-n_epochs = 1
-n_samples = 1000
+n_epochs = 25
+n_samples = 3000
 window_size = 50
-d = 2
+d = 3
 student_df = 5
 distributions = [
     rf"$\mathcal{{N}}(0, I_{{{d}}})$",
@@ -22,6 +22,8 @@ distributions = [
     rf"$\mathrm{{Laplace}}(0,1)^{{{d}}}$",
     rf"$\mathrm{{Dir}}(1, 1, 1)$",
     rf"$\mathrm{{Dir}}(5, 5, 5)$",
+    rf"$0.5 \times N(\mu,I)+0.5 \times N(-\mu,I)$",
+    rf"$0.7 \times N(\mu,I)+0.3 \times N(-\mu,I)$",
 ]
 # ============================================================
 # Distribution names used by generate_dist file
@@ -35,6 +37,8 @@ distribution_names = [
     "Laplace(0, 1)",
     "Dir(1, 1, 1)",
     "Dir(10, 10, 10)",
+    "Normal_mix_equal",
+    "Normal_mix_07",
 ]
 
 # ============================================================
@@ -54,15 +58,14 @@ markers = {
     "Energy-based": "^",
 }
 
-
 n = len(distributions)
 rng = np.random.default_rng(42)
 # ============================================================
 # DEBUGGING CONFIGURATION
 # Select exactly one pair (i, j) and one algorithm
 # ============================================================
-i = 5
-j = 6
+i = 0
+j = 7
 
 # ============================================================
 # Get selected null and alternative distributions
@@ -75,10 +78,10 @@ alt_dist_name = distribution_names[j]
 # ============================================================
 # Threshold configuration
 # ============================================================
-n_thresholds = 100
-gammas_tewma = np.linspace(0, 0.08, n_thresholds)
-gammas_mmd = np.linspace(0, 5, n_thresholds)
-gammas_ed = np.linspace(0, 0.8, n_thresholds)
+n_thresholds = 1000
+gammas_tewma = np.logspace(0, 20, n_thresholds)
+gammas_mmd = np.linspace(0, 10, n_thresholds)
+gammas_ed = np.linspace(0, 0.5, n_thresholds)
 # ============================================================
 # Initialize totals BEFORE the epoch loop
 # ============================================================
@@ -148,12 +151,9 @@ for epoch in range(n_epochs):
         window_size=window_size,
         T=n_samples // 2,
     )
-    print(arl_tewma.shape)
-    print(*arl_tewma)
     dd_ed -= n_samples // 2
     arl_total["Energy-based"] += arl_ed
     dd_total["Energy-based"] += dd_ed
-
 
 for algo in algorithms:
     arl_total[algo] /= n_epochs
@@ -169,14 +169,12 @@ for algo in algorithms:
 
 ax.set_xlabel("Average Run Length (ARL)", fontsize=13)
 ax.set_ylabel("Detection Delay (DD)", fontsize=13)
-
 ax.set_title(
     f"{null_dist} → {alt_dist}",
     fontsize=15,
 )
 
 ax.grid(True, alpha=0.3)
-
 ax.legend(
     title="Algorithm",
     fontsize=11,
