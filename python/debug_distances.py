@@ -3,14 +3,14 @@ import numpy as np
 import pandas as pd
 from changepoint.ed import ed_detection_vectorized
 from changepoint.mmd import mmd_detection_vectorized
-from changepoint.tewma import tewma_detection_vectorized
+from changepoint.tewma import tewma_detection_vectorized_with_dists
 from generate_data import generate_dist
 
 # ============================================================
 # Configuration
 # ============================================================
-n_epochs = 5
-n_samples = 1000
+n_epochs = 10
+n_samples = 3000
 window_size = 50
 d = 3
 student_df = 5
@@ -29,6 +29,8 @@ distributions = [
 # Distribution names used by generate_dist file
 # ============================================================
 
+dists = []
+dists_change = []
 distribution_names = [
     "N(0, 1)",
     "MG(0.5)",
@@ -47,8 +49,8 @@ distribution_names = [
 algorithms_count = 3
 algorithms = [
     "TEWMA",
-    "MMD",
-    "Energy-based",
+    # "MMD",
+    # "Energy-based",
 ]
 fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -110,12 +112,12 @@ for epoch in range(n_epochs):
     df_change = pd.DataFrame(changed)
 
     # Run selected algorithm
-    arl_tewma = tewma_detection_vectorized(
+    arl_tewma, dists_same = tewma_detection_vectorized_with_dists(
         df=df_no_change,
         gammas=gammas_tewma,
         window_size=window_size,
     )
-    dd_tewma = tewma_detection_vectorized(
+    dd_tewma, dists_ch = tewma_detection_vectorized_with_dists(
         df=df_change,
         gammas=gammas_tewma,
         window_size=window_size,
@@ -124,6 +126,9 @@ for epoch in range(n_epochs):
     dd_tewma -= n_samples // 2
     arl_total["TEWMA"] += arl_tewma
     dd_total["TEWMA"] += dd_tewma
+    dists.extend(dists_same)
+    dists_change.append(dists_ch)
+    """
     # MMD
     arl_mmd = mmd_detection_vectorized(
         df=df_no_change,
@@ -156,6 +161,7 @@ for epoch in range(n_epochs):
     dd_total["Energy-based"] += dd_ed
     # print("TEWMA:", *arl_tewma)
     # print("MMD:", arl_mmd)
+    """
 
 
 for algo in algorithms:
@@ -186,4 +192,27 @@ ax.legend(
 )
 
 plt.tight_layout()
+plt.show()
+
+
+plt.figure()
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import gamma, lognorm
+
+plt.hist(dists, bins=100, density=True, alpha=0.4)
+
+x = np.linspace(min(dists), max(dists), 500)
+
+plt.plot(x, gamma.pdf(x, *gamma.fit(dists)), label="Gamma")
+plt.plot(x, lognorm.pdf(x, *lognorm.fit(dists)), label="Lognormal")
+
+plt.legend()
+plt.show()
+
+plt.figure()
+
+plt.hist(dists_change, bins=30, density=True, alpha=0.4)
+
+plt.legend()
 plt.show()

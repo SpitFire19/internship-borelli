@@ -10,13 +10,11 @@ from generate_data import generate_dist
 # Configuration
 # ============================================================
 
+n_epochs = 30
 n_samples = 1000
 window_size = 50
-d = 2
+d = 3
 student_df = 5
-
-n_epochs = 25
-n_thresholds = 200
 
 rng = np.random.default_rng(42)
 
@@ -40,15 +38,15 @@ distribution_names = [
     "Dir(1, 1, 1)",
     "Dir(10, 10, 10)",
 ]
-n = len(distributions)
+n = len(distributions) - 2
 
 # ============================================================
 # Threshold configuration
 # ============================================================
 n_thresholds = 1000
-gammas_tewma = np.logspace(0, 100, n_thresholds)
-gammas_mmd = np.linspace(0, 5, n_thresholds)
-gammas_ed = np.linspace(0, 0.8, n_thresholds)
+gammas_tewma = np.linspace(0, 1, n_thresholds)
+gammas_mmd = np.linspace(0, 0.5, n_thresholds)
+gammas_ed = np.linspace(0, 0.5, n_thresholds)
 
 # ============================================================
 # Figure
@@ -180,7 +178,7 @@ for i in range(n):
 # ============================================================
 # Distribution names
 # ============================================================
-for j, dist in enumerate(distributions):
+for j, dist in enumerate(distributions[:n]):
     axes[-1, j].set_xlabel(
         dist,
         fontsize=12,
@@ -188,7 +186,7 @@ for j, dist in enumerate(distributions):
         labelpad=10,
     )
 
-for i, dist in enumerate(distributions):
+for i, dist in enumerate(distributions[:n]):
     axes[i, 0].set_ylabel(
         dist,
         fontsize=12,

@@ -3,3 +3,4 @@ src/*
 !src/*.cpp
 python/__pycache__/
 python/changepoint/__pycache__/
+*.png
