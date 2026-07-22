@@ -1,3 +1,5 @@
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,9 +11,9 @@ from generate_data import generate_dist
 # ============================================================
 # Configuration
 # ============================================================
-n_epochs = 5
+n_epochs = 50
 n_samples = 1000
-window_size = 50
+window_size = 200
 d = 3
 student_df = 5
 distributions = [
@@ -65,7 +67,7 @@ rng = np.random.default_rng(42)
 # Select exactly one pair (i, j) and one algorithm
 # ============================================================
 i = 0
-j = 3
+j = 2
 
 # ============================================================
 # Get selected null and alternative distributions
@@ -87,11 +89,13 @@ gammas_ed = np.linspace(0, 0.5, n_thresholds)
 # ============================================================
 arl_total = {algo: np.zeros(n_thresholds) for algo in algorithms}
 dd_total = {algo: np.zeros(n_thresholds) for algo in algorithms}
+avg_rutime = {algo: 0.0 for algo in algorithms}
 
 # ============================================================
 # Run Monte Carlo epochs
 # ============================================================
 rng = np.random.default_rng(42)
+
 for epoch in range(n_epochs):
     print(f"Epoch {epoch + 1}/{n_epochs}")
 
@@ -110,6 +114,7 @@ for epoch in range(n_epochs):
     df_change = pd.DataFrame(changed)
 
     # Run selected algorithm
+    start = time.time()
     arl_tewma = tewma_detection_vectorized(
         df=df_no_change,
         gammas=gammas_tewma,
@@ -121,10 +126,13 @@ for epoch in range(n_epochs):
         window_size=window_size,
         T=n_samples // 2,
     )
+    end = time.time()
+    avg_rutime["TEWMA"] += end - start
     dd_tewma -= n_samples // 2
     arl_total["TEWMA"] += arl_tewma
     dd_total["TEWMA"] += dd_tewma
     # MMD
+    start = time.time()
     arl_mmd = mmd_detection_vectorized(
         df=df_no_change,
         gammas=gammas_mmd,
@@ -136,10 +144,13 @@ for epoch in range(n_epochs):
         window_size=window_size,
         T=n_samples // 2,
     )
+    end = time.time()
+    avg_rutime["MMD"] += end - start
     dd_mmd -= n_samples // 2
     arl_total["MMD"] += arl_mmd
     dd_total["MMD"] += dd_mmd
     # Energy distance
+    start = time.time()
     arl_ed = ed_detection_vectorized(
         X=df_no_change,
         thresholds=gammas_ed,
@@ -151,16 +162,21 @@ for epoch in range(n_epochs):
         window_size=window_size,
         T=n_samples // 2,
     )
+    end = time.time()
+    avg_rutime["Energy-based"] += end - start
     dd_ed -= n_samples // 2
     arl_total["Energy-based"] += arl_ed
     dd_total["Energy-based"] += dd_ed
     # print("TEWMA:", *arl_tewma)
     # print("MMD:", arl_mmd)
 
+print("Average runtime for TEWMA")
 
 for algo in algorithms:
     arl_total[algo] /= n_epochs
     dd_total[algo] /= n_epochs
+    avg_rutime[algo] /= n_epochs
+    print(f"Average runtime for {algo}: ", avg_rutime[algo], "seconds")
     ax.plot(
         arl_total[algo],
         dd_total[algo],

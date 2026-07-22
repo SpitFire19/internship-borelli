@@ -10,9 +10,9 @@ from generate_data import generate_dist
 # Configuration
 # ============================================================
 
-n_epochs = 30
-n_samples = 1000
-window_size = 50
+n_epochs = 15
+n_samples = 1500
+window_size = 200
 d = 3
 student_df = 5
 
@@ -38,7 +38,7 @@ distribution_names = [
     "Dir(1, 1, 1)",
     "Dir(10, 10, 10)",
 ]
-n = len(distributions) - 2
+n = len(distributions) - 5
 
 # ============================================================
 # Threshold configuration
@@ -92,6 +92,7 @@ for i in range(n):
         dd_total = {algo: np.zeros(n_thresholds) for algo in algorithms}
 
         for epoch in range(n_epochs):
+            print(f"Epoch {epoch+1}/{n_epochs}")
             before = generate_dist(rng, null_name, d, n_samples // 2)
             no_change_after = generate_dist(rng, null_name, d, n_samples // 2)
             change_after = generate_dist(rng, alt_name, d, n_samples // 2)
