@@ -10,10 +10,10 @@ from generate_data import generate_dist
 # Configuration
 # ============================================================
 
-n_epochs = 15
-n_samples = 1500
+n_epochs = 25
+n_samples = 2000
 window_size = 200
-d = 3
+d = 2
 student_df = 5
 
 rng = np.random.default_rng(42)
@@ -38,7 +38,7 @@ distribution_names = [
     "Dir(1, 1, 1)",
     "Dir(10, 10, 10)",
 ]
-n = len(distributions) - 5
+n = len(distributions) - 2
 
 # ============================================================
 # Threshold configuration

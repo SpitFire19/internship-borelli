@@ -12,7 +12,7 @@ from generate_data import generate_dist
 # Configuration
 # ============================================================
 n_epochs = 50
-n_samples = 1000
+n_samples = 3000
 window_size = 200
 d = 3
 student_df = 5
@@ -80,7 +80,7 @@ alt_dist_name = distribution_names[j]
 # ============================================================
 # Threshold configuration
 # ============================================================
-n_thresholds = 1000
+n_thresholds = 5000
 gammas_tewma = np.linspace(0, 1, n_thresholds)
 gammas_mmd = np.linspace(0, 0.5, n_thresholds)
 gammas_ed = np.linspace(0, 0.5, n_thresholds)
